@@ -4,11 +4,40 @@
 <summary>🇺🇸 GSAP Timeline Sync with React
 </summary>
 
+## 📦 Install
+
+```bash
+npm install react-gsap-master-timeline
+```
+
 This lightweight utility lets you **sync multiple GSAP timelines across React components** using a **master timeline**. Each local timeline can:
 
 - Register labels.
 - Declare dependencies.
 - Be automatically inserted into a global timeline.
+
+### 🚀 Quick Usage
+
+```tsx
+import { TimelineProvider } from "react-gsap-master-timeline";
+
+function App() {
+  return (
+    <TimelineProvider>
+      <YourComponent />
+    </TimelineProvider>
+  );
+}
+```
+
+Inside your component:
+
+```tsx
+import { useMasterTimeline } from "react-gsap-master-timeline";
+
+const { registerSyncedTimeline, masterTimeline, isReadyToPlay } =
+  useMasterTimeline();
+```
 
 ### 🧠 Why use this TimelineProvider?
 
@@ -179,7 +208,38 @@ onDependencyFail: () => {
 <details>
   <summary>🇪🇸 Sincronizador de Timelines con GSAP y React </summary>
 
-Este proyecto te permite **sincronizar múltiples animaciones (Timelines)** creadas en distintos componentes React usando un **timeline maestro**. Las animaciones se agregan de forma secuencial o con dependencias mediante etiquetas (`labels`) gestionadas automáticamente.
+## 📦 Instalación
+
+```bash
+npm install react-gsap-master-timeline
+```
+
+Este paquete permite sincronizar múltiples líneas de tiempo (`timeline`) de GSAP entre distintos componentes de React usando una sola línea de tiempo maestra (`masterTimeline`) de forma declarativa.
+
+Ya no necesitas usar setTimeout, delay, ni técnicas complejas para coordinar animaciones entre componentes. Este proveedor centralizado lo hace automáticamente.
+
+### 🚀 Uso rápido
+
+```tsx
+import { TimelineProvider } from "react-gsap-master-timeline";
+
+function App() {
+  return (
+    <TimelineProvider>
+      <YourComponent />
+    </TimelineProvider>
+  );
+}
+```
+
+Dentro de tu component:
+
+```tsx
+import { useMasterTimeline } from "react-gsap-master-timeline";
+
+const { registerSyncedTimeline, masterTimeline, isReadyToPlay } =
+  useMasterTimeline();
+```
 
 ### 🧠 ¿Por qué usar este TimelineProvider?
 

@@ -1,0 +1,8 @@
+src/
+example/
+public/
+tsconfig*.json
+vite.config.ts
+*.log
+.eslint*
+index.html

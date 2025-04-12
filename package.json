@@ -3,9 +3,16 @@
   "name": "react-gsap-master-timeline",
   "description": "A declarative system to synchronize GSAP timelines across React components using a single master timeline.",
   "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build:vite": "tsc -b && vite build",
+    "build": "tsc --project tsconfig.lib.json",
     "lint": "eslint .",
     "preview": "vite preview"
   },
