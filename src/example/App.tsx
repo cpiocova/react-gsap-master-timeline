@@ -8,8 +8,8 @@ function App() {
     <>
       <Circle />
       <Nav />
-      <Box />
       <Letter />
+      <Box />
     </>
   );
 }

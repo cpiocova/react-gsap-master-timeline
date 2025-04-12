@@ -35,7 +35,7 @@ export default function Box() {
             .addLabel(anyName)
 
             .to(ref.current, {
-              y: 100,
+              y: 10,
               duration: 1,
             })
             .to(ref.current, { x: 0, duration: 1 });
@@ -68,7 +68,7 @@ export default function Box() {
   return (
     <div
       ref={ref}
-      style={{ width: 100, height: 100, backgroundColor: color, margin: 20 }}
+      style={{ width: 40, height: 40, backgroundColor: color, margin: 10 }}
     >
       {isLoading ? "Loading ..." : "Box"}
     </div>

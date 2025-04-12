@@ -15,12 +15,15 @@ function Letter() {
         createTimeline: () => {
           const tl = gsap.timeline();
           tl.to(ref.current, {
-            x: -50,
+            x: 20,
             fontSize: "2em",
             duration: 1,
           });
 
           return tl;
+        },
+        onDependencyFail: () => {
+          gsap.to(ref.current, { y: -10, fontSize: "8em", duration: 5 });
         },
       });
     },
@@ -31,11 +34,9 @@ function Letter() {
     <div
       ref={ref}
       style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%,-50%)",
-        fontSize: "8em",
+        display: "inline",
+        backgroundColor: "green",
+        fontSize: "4em",
         color: "yellow",
       }}
     >

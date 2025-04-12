@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useContext, useRef, useState } from "react";
 import gsap from "gsap";
 
@@ -6,6 +8,17 @@ interface TimelineEntry {
   dependsOn?: string[];
   labels?: Record<string, number | ((tl: gsap.core.Timeline) => number)>;
   createTimeline: () => gsap.core.Timeline;
+  onDependencyFail?: (
+    id: string,
+    missingLabels: string[]
+  ) =>
+    | void
+    | gsap.core.Timeline
+    | {
+        timeline: gsap.core.Timeline;
+        labels?: Record<string, number | ((tl: gsap.core.Timeline) => number)>;
+        startAt?: number;
+      };
 }
 
 interface TimelineContextType {
@@ -31,11 +44,27 @@ export const TimelineProvider = ({
 
   const [isReadyToPlay, setIsReadyToPlay] = useState(false);
 
+  const registerLabels = (
+    tl: gsap.core.Timeline,
+    id: string,
+    labels: Record<string, number | ((tl: gsap.core.Timeline) => number)> = {},
+    offset = 0
+  ) => {
+    Object.entries(labels).forEach(([label, getTime]) => {
+      const localTime = typeof getTime === "function" ? getTime(tl) : getTime;
+      const globalTime = offset + localTime;
+      const labelKey = `${id}.${label}`;
+      labelMap.current.set(labelKey, globalTime);
+      masterTimelineRef.current.addLabel(labelKey, globalTime);
+    });
+  };
+
   const registerSyncedTimeline = async ({
     id,
     dependsOn = [],
     labels = {},
     createTimeline,
+    onDependencyFail,
   }: TimelineEntry) => {
     pendingCount.current++;
 
@@ -55,27 +84,60 @@ export const TimelineProvider = ({
       });
     };
 
-    const offsets = await Promise.all(dependsOn.map(resolveLabel));
-    const startAt = offsets.length > 0 ? Math.max(...offsets) : 0;
+    let startAt = 0;
 
-    const tl = createTimeline();
-    masterTimelineRef.current.add(tl, startAt);
+    try {
+      const offsets = await Promise.all(dependsOn.map(resolveLabel));
+      startAt = offsets.length > 0 ? Math.max(...offsets) : 0;
 
-    timelinesRef.current.set(id, { tl, start: startAt });
+      const tl = createTimeline();
+      masterTimelineRef.current.add(tl, startAt);
+      timelinesRef.current.set(id, { tl, start: startAt });
 
-    Object.entries(labels).forEach(([label, getTime]) => {
-      const localTime = typeof getTime === "function" ? getTime(tl) : getTime;
-      const globalTime = startAt + localTime;
-      const labelKey = `${id}.${label}`;
-      labelMap.current.set(labelKey, globalTime);
-      masterTimelineRef.current.addLabel(labelKey, globalTime);
-    });
+      registerLabels(tl, id, labels, startAt);
+    } catch (e) {
+      const error = e as Error;
+      console.warn(
+        `[TimelineProvider] Skipping timeline "${id}" because:`,
+        error.message
+      );
 
-    readyCount.current++;
+      if (typeof onDependencyFail === "function") {
+        const fallback = onDependencyFail(id, dependsOn);
 
-    if (readyCount.current === pendingCount.current) {
-      // masterTimelineRef.current.play();
-      setIsReadyToPlay(true);
+        let fallbackTimeline: gsap.core.Timeline | undefined;
+        let fallbackLabels:
+          | Record<string, number | ((tl: gsap.core.Timeline) => number)>
+          | undefined;
+
+        let fallbackStartAt = 0;
+
+        if (fallback && "timeline" in fallback) {
+          fallbackTimeline = fallback.timeline;
+          fallbackLabels = fallback.labels;
+          fallbackStartAt = fallback.startAt ?? 0;
+        } else if (fallback && typeof fallback.totalDuration === "function") {
+          fallbackTimeline = fallback;
+        }
+
+        if (fallbackTimeline) {
+          masterTimelineRef.current.add(fallbackTimeline, fallbackStartAt);
+
+          if (fallbackLabels) {
+            registerLabels(
+              fallbackTimeline,
+              id,
+              fallbackLabels,
+              fallbackStartAt
+            );
+          }
+        }
+      }
+    } finally {
+      readyCount.current++;
+      if (readyCount.current === pendingCount.current) {
+        setIsReadyToPlay(true);
+      }
     }
   };
 
