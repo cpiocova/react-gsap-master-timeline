@@ -1,11 +1,11 @@
 import { useRef } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { useTimeline } from "@lib/TimelineProvider";
+import { useMasterTimeline } from "@lib/TimelineProvider";
 
 function Letter() {
   const ref = useRef<HTMLDivElement>(null);
-  const { registerSyncedTimeline } = useTimeline();
+  const { registerSyncedTimeline } = useMasterTimeline();
 
   useGSAP(
     () => {

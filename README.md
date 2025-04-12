@@ -60,7 +60,7 @@ En cualquier componente:
 
 ```tsx
 import { useGSAP } from "@gsap/react";
-import { useTimeline } from "@/lib/TimelineProvider";
+import { useMasterTimeline } from "@/lib/TimelineProvider";
 
 useGSAP(() => {
   registerSyncedTimeline({
@@ -95,6 +95,26 @@ registerSyncedTimeline({
 ```
 
 El timeline de `nav` no se ejecutará hasta que `box.middle` haya sido registrado.
+
+### 4. Acceder a la timeline
+
+A diferencia de la versión anterior, ahora el `TimelineProvider` no hace `.play()` automáticamente cuando todas las líneas de tiempo están listas. En su lugar, expone una propiedad booleana `isReadyToPlay` desde el contexto.
+
+Esto te permite:
+
+- Asegurarte de que otros recursos (como imágenes) estén completamente cargados.
+- Coordinar el inicio del masterTimeline de forma manual y controlada.
+
+```tsx
+const { isReadyToPlay, masterTimeline } = useMasterTimeline();
+const [isImageLoaded, setIsImageLoaded] = useState(false);
+
+useEffect(() => {
+  if (isReadyToPlay && isImageLoaded) {
+    masterTimeline.play();
+  }
+}, [isReadyToPlay, isImageLoaded]);
+```
 
 ---
 
@@ -152,6 +172,8 @@ import { TimelineProvider } from "@/lib/TimelineProvider";
 
 ### 2. Register your timeline
 
+In any component:
+
 ```tsx
 registerSyncedTimeline({
   id: "box",
@@ -173,12 +195,34 @@ registerSyncedTimeline({
 
 ### 3. Wait for labels from others
 
+Another component may depend on the label of the previous one:
+
 ```tsx
 registerSyncedTimeline({
   id: "nav",
   dependsOn: ["box.middle"],
   createTimeline: () => gsap.timeline().to(navRef.current, { opacity: 1 }),
 });
+```
+
+### 4. Accessing the Timeline
+
+Unlike the previous version, the `TimelineProvider` now no longer automatically executes a `.play()` when all timelines are ready. Instead, it exposes a boolean property, `isReadyToPlay`, from the context.
+
+This allows you to:
+
+- Ensure that other resources (such as images) are fully loaded.
+- Coordinate the start of the master timeline manually and in a controlled manner.
+
+```tsx
+const { isReadyToPlay, masterTimeline } = useMasterTimeline();
+const [isImageLoaded, setIsImageLoaded] = useState(false);
+
+useEffect(() => {
+  if (isReadyToPlay && isImageLoaded) {
+    masterTimeline.play();
+  }
+}, [isReadyToPlay, isImageLoaded]);
 ```
 
 ---

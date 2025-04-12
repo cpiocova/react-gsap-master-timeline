@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useRef } from "react";
+import React, { createContext, useContext, useRef, useState } from "react";
 import gsap from "gsap";
 
 interface TimelineEntry {
@@ -11,6 +11,7 @@ interface TimelineEntry {
 interface TimelineContextType {
   registerSyncedTimeline: (entry: TimelineEntry) => void;
   masterTimeline: gsap.core.Timeline;
+  isReadyToPlay: boolean;
 }
 
 const TimelineContext = createContext<TimelineContextType | null>(null);
@@ -27,6 +28,8 @@ export const TimelineProvider = ({
   const labelMap = useRef<Map<string, number>>(new Map());
   const pendingCount = useRef(0);
   const readyCount = useRef(0);
+
+  const [isReadyToPlay, setIsReadyToPlay] = useState(false);
 
   const registerSyncedTimeline = async ({
     id,
@@ -71,7 +74,8 @@ export const TimelineProvider = ({
     readyCount.current++;
 
     if (readyCount.current === pendingCount.current) {
-      masterTimelineRef.current.play();
+      // masterTimelineRef.current.play();
+      setIsReadyToPlay(true);
     }
   };
 
@@ -80,6 +84,7 @@ export const TimelineProvider = ({
       value={{
         registerSyncedTimeline,
         masterTimeline: masterTimelineRef.current,
+        isReadyToPlay,
       }}
     >
       {children}
@@ -87,8 +92,9 @@ export const TimelineProvider = ({
   );
 };
 
-export const useTimeline = (): TimelineContextType => {
+export const useMasterTimeline = (): TimelineContextType => {
   const ctx = useContext(TimelineContext);
-  if (!ctx) throw new Error("useTimeline must be used inside TimelineProvider");
+  if (!ctx)
+    throw new Error("useMasterTimeline must be used inside TimelineProvider");
   return ctx;
 };

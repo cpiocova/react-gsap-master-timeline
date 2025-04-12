@@ -1,13 +1,29 @@
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
-import { useTimeline } from "@lib/TimelineProvider";
+import { useMasterTimeline } from "@lib/TimelineProvider";
 
 const anyName = "halfway";
 
 export default function Box() {
   const ref = useRef<HTMLDivElement>(null);
-  const { registerSyncedTimeline } = useTimeline();
+  const [color, setColor] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
+  const { registerSyncedTimeline, isReadyToPlay, masterTimeline } =
+    useMasterTimeline();
+
+  const loadColor = (): Promise<string> =>
+    new Promise((resolve) => {
+      setTimeout(() => {
+        const color =
+          "#" +
+          Math.floor(Math.random() * 0x1000000)
+            .toString(16)
+            .padStart(6, "0");
+        resolve(color);
+      }, 1000);
+    });
 
   useGSAP(
     () => {
@@ -34,12 +50,27 @@ export default function Box() {
     { scope: ref }
   );
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const newColor = await loadColor();
+        setColor(newColor);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (!masterTimeline || !isReadyToPlay || isLoading) return;
+    masterTimeline.play();
+  }, [masterTimeline, isReadyToPlay, isLoading]);
   return (
     <div
       ref={ref}
-      style={{ width: 100, height: 100, backgroundColor: "blue", margin: 20 }}
+      style={{ width: 100, height: 100, backgroundColor: color, margin: 20 }}
     >
-      Box
+      {isLoading ? "Loading ..." : "Box"}
     </div>
   );
 }
